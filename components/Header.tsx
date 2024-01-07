@@ -5,20 +5,18 @@ import Avatar from "react-avatar";
 import { MagnifyingGlassIcon } from "@heroicons/react/16/solid";
 import { UserCircleIcon } from "@heroicons/react/16/solid";
 import { useBoardStore } from "@/store/BoardStore";
-import { Board } from "@/typings";
+import { TaskBoard } from "@/typings";
 import { useEffect, useState } from "react";
 import fetchSuggestion from "@/lib/fetchSuggestions";
-
-type BoardStoreType = [
-  board: Board,
-  searchString: string,
-  setSearchString: (searchString: string) => void
-];
+import { useSearchStore } from "@/store/SearchStore";
 
 function Header() {
-  const [board, searchString, setSearchString] = useBoardStore<BoardStoreType>(
-    (state) => [state.board, state.searchString, state.setSearchString]
-  );
+  const [board] = useBoardStore((state) => [state.board]);
+
+  const [searchTerm, setSearchTerm] = useSearchStore((state) => [
+    state.searchTerm,
+    state.setSearchTerm,
+  ]);
 
   const [loading, setLoading] = useState(false);
   const [suggestion, setSuggestion] = useState("");
@@ -60,8 +58,8 @@ function Header() {
               type="text"
               placeholder="Search"
               className="flex-1 outline-none p-2"
-              value={searchString}
-              onChange={(e) => setSearchString(e.target.value)}
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
             />
             <button type="submit" hidden>
               Search

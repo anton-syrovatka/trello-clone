@@ -1,50 +1,50 @@
 import { database } from "@/appwrite";
-import { TypeColumn, Column, TodoData, Board, Todo } from "@/typings";
+import { TaskStatus, TaskColumn, TaskData, TaskBoard, Task } from "@/typings";
 
-export const getTodosGroupedByColumn = async (): Promise<Board> => {
-  const data = await database.listDocuments<TodoData>(
-    process.env.APPWRITE_TRELLO_DATABASE_ID!,
-    process.env.APPWRITE_TRELLO_TODOS_COLLECTION_ID!
+export const getTodosGroupedByColumn = async (): Promise<TaskBoard> => {
+  const data = await database.listDocuments<TaskData>(
+    process.env.NEXT_PUBLIC_APPWRITE_TRELLO_DATABASE_ID!,
+    process.env.NEXT_PUBLIC_APPWRITE_TRELLO_TODOS_COLLECTION_ID!
   );
 
-  const todoDocuments = data.documents;
+  const taskDocuments = data.documents;
 
-  const todos: Todo[] = todoDocuments.map((doc) => {
+  const tasks: Task[] = taskDocuments.map((doc) => {
     const { image, ...rest } = doc;
-    const todo: Todo = rest;
+    const task: Task = rest;
 
     if (image) {
-      todo.image = JSON.parse(image);
+      task.image = JSON.parse(image);
     }
-    return todo;
+    return task;
   });
 
-  const columns = todos.reduce((acc, todo) => {
-    if (!acc.get(todo.status)) {
-      acc.set(todo.status, {
-        id: todo.status,
-        todos: [],
+  const columns = tasks.reduce((acc, task) => {
+    if (!acc.get(task.status)) {
+      acc.set(task.status, {
+        id: task.status,
+        tasks: [],
       });
     }
 
-    acc.get(todo.status)!.todos.push({
-      $id: todo.$id,
-      $createdAt: todo.$createdAt,
-      title: todo.title,
-      status: todo.status,
-      ...(todo.image && { image: todo.image }),
+    acc.get(task.status)!.tasks.push({
+      $id: task.$id,
+      $createdAt: task.$createdAt,
+      title: task.title,
+      status: task.status,
+      ...(task.image && { image: task.image }),
     });
 
     return acc;
-  }, new Map<TypeColumn, Column>());
+  }, new Map<TaskStatus, TaskColumn>());
 
-  const columnTypes: TypeColumn[] = ["todo", "in-progress", "done"];
+  const columnTypes: TaskStatus[] = ["todo", "in-progress", "done"];
 
   for (const columnType of columnTypes) {
     if (!columns.get(columnType)) {
       columns.set(columnType, {
         id: columnType,
-        todos: [],
+        tasks: [],
       });
     }
   }
@@ -55,7 +55,7 @@ export const getTodosGroupedByColumn = async (): Promise<Board> => {
     )
   );
 
-  const board: Board = {
+  const board: TaskBoard = {
     columns: sortedColumns,
   };
 

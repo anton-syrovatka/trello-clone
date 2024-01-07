@@ -1,7 +1,7 @@
-import { Board } from "@/typings";
+import { TaskBoard } from "@/typings";
 import formatTodosForAI from "./formatTodosForAI";
 
-const fetchSuggestion = async (board: Board) => {
+const fetchSuggestion = async (board: TaskBoard) => {
   return "Herr Syrovatka, welcome to Trello Clone! ";
   try {
     const todos = formatTodosForAI(board);

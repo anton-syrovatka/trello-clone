@@ -1,29 +1,29 @@
 import { Models } from "appwrite";
 
-type TypeColumn = "todo" | "in-progress" | "done";
+type TaskStatus = "todo" | "in-progress" | "done";
 
-interface Todo {
+interface Task {
   $id: string;
   $createdAt: string;
   title: string;
-  status: TypeColumn;
-  image?: Image;
+  status: TaskStatus;
+  image?: TaskImage;
 }
 
-interface TodoData extends Todo, Models.Document {
+interface TaskData extends Task, Models.Document {
   image?: string;
 }
 
-interface Column {
-  id: TypeColumn;
-  todos: Todo[];
+interface TaskColumn {
+  id: TaskStatus;
+  tasks: Task[];
 }
 
-interface Board {
-  columns: Map<TypeColumn, Column>;
+interface TaskBoard {
+  columns: Map<TaskStatus, Column>;
 }
 
-interface Image {
+interface TaskImage {
   bucketId: string;
   fileId: string;
 }

@@ -3,38 +3,39 @@
 import { RadioGroup } from "@headlessui/react";
 import { useBoardStore } from "@/store/BoardStore";
 import { CheckCircleIcon } from "@heroicons/react/16/solid";
+import { TaskStatus } from "@/typings";
 
 const types = [
   {
     id: "todo",
     name: "Todo",
-    description: "[description]",
+    description: "A new task to be completed",
     color: "bg-yellow-500",
   },
   {
     id: "in-progress",
     name: "In Progress",
-    description: "[description]",
+    description: "A task that is currently being worked on",
     color: "bg-blue-500",
   },
   {
     id: "done",
     name: "Done",
-    description: "[description]",
+    description: "A task that has been completed",
     color: "bg-green-500",
   },
 ];
 
-function TaskTypeRadioGroup() {
-  const [setNewTaskType, newTaskType] = useBoardStore((state) => [
-    state.setNewTaskType,
-    state.newTaskType,
-  ]);
+type Props = {
+  value: TaskStatus;
+  onChange: (value: TaskStatus) => void;
+};
 
+function TaskStatusSelector({ value, onChange }: Props) {
   return (
     <div className="w-full py-5">
       <div className="mx-auto w-full max-w-md">
-        <RadioGroup value={newTaskType} onChange={(e) => setNewTaskType(e)}>
+        <RadioGroup value={value} onChange={onChange}>
           <div className="space-y-2">
             {types.map((type) => (
               <RadioGroup.Option
@@ -96,4 +97,4 @@ function TaskTypeRadioGroup() {
   );
 }
 
-export default TaskTypeRadioGroup;
+export default TaskStatusSelector;

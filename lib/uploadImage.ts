@@ -6,7 +6,7 @@ export default async function uploadImage(file: File) {
   }
 
   const fileUploaded = await storage.createFile(
-    process.env.APPWRITE_TRELLO_BUCKET_ID!,
+    process.env.NEXT_PUBLIC_APPWRITE_TRELLO_BUCKET_ID!,
     ID.unique(),
     file
   );

@@ -1,70 +1,63 @@
 import { ID, database, storage } from "@/appwrite";
 import { getTodosGroupedByColumn } from "@/lib/getTodosGroupedByColumn";
 import uploadImage from "@/lib/uploadImage";
-import { Board, Column, Image, Todo, TypeColumn } from "@/typings";
+import { TaskBoard, TaskColumn, TaskImage, Task, TaskStatus } from "@/typings";
 import { create } from "zustand";
 
 interface BoardState {
-  board: Board;
-  getBoard: () => void;
-  setBoardState: (board: Board) => void;
-  updateTodoInDb: (todo: Todo, columnId: TypeColumn) => void;
+  board: TaskBoard;
+  setBoard: (board: TaskBoard) => void;
+  fetchBoard: () => void;
 
-  newTaskInput: string;
-  setNewTaskInput: (text: string) => void;
-  deleteTask: (taskIndex: number, todo: Todo, id: TypeColumn) => void;
-
-  addTask: (todo: string, columnId: TypeColumn, image?: File | null) => void;
-
-  searchString: string;
-  setSearchString: (searchString: string) => void;
-
-  newTaskType: TypeColumn;
-  setNewTaskType: (columnId: TypeColumn) => void;
-
-  image: File | null;
-  setImage: (image: File | null) => void;
+  createTask: (
+    taskTitle: string,
+    columnId: TaskStatus,
+    image?: File | null
+  ) => Promise<void>;
+  updateTask: (tasks: Task, columnId: TaskStatus) => Promise<void>;
+  deleteTask: (taskIndex: number, tasks: Task, id: TaskStatus) => Promise<void>;
 }
 
 export const useBoardStore = create<BoardState>((set, get) => ({
   board: {
-    columns: new Map<TypeColumn, Column>(),
+    columns: new Map<TaskStatus, TaskColumn>(),
   },
-  getBoard: async () => {
+  setBoard: (board: TaskBoard) => {
+    set({ board });
+  },
+
+  fetchBoard: async () => {
     const board = await getTodosGroupedByColumn();
     set({ board });
   },
-  setBoardState: (board: Board) => {
-    set({ board });
-  },
 
-  newTaskInput: "",
-  setNewTaskInput: (text: string) => {
-    set({ newTaskInput: text });
-  },
-  deleteTask: async (taskIndex: number, todo: Todo, id: TypeColumn) => {
-    const newColumns = new Map(get().board.columns);
-
-    newColumns.get(id)?.todos.splice(taskIndex, 1);
+  deleteTask: async (taskIndex: number, task: Task, id: TaskStatus) => {
+    const columns = get().board.columns;
+    const tasks = [...columns.get(id)?.tasks];
+    tasks.splice(taskIndex, 1);
+    columns.get(id).tasks = tasks;
 
     set({
-      board: {
-        columns: newColumns,
-      },
+      board: { columns },
     });
 
-    if (todo.image) {
-      await storage.deleteFile(todo.image.bucketId, todo.image.fileId);
+    if (task.image) {
+      await storage.deleteFile(task.image.bucketId, task.image.fileId);
     }
 
     await database.deleteDocument(
-      process.env.APPWRITE_TRELLO_DATABASE_ID!,
-      process.env.APPWRITE_TRELLO_TODOS_COLLECTION_ID!,
-      todo.$id
+      process.env.NEXT_PUBLIC_APPWRITE_TRELLO_DATABASE_ID!,
+      process.env.NEXT_PUBLIC_APPWRITE_TRELLO_TODOS_COLLECTION_ID!,
+      task.$id
     );
   },
-  addTask: async (todo: string, columnId: TypeColumn, image?: File | null) => {
-    let file: Image | undefined;
+
+  createTask: async (
+    taskTitle: string,
+    columnId: TaskStatus,
+    image?: File | null
+  ) => {
+    let file: TaskImage | undefined;
 
     if (image) {
       const fileUploaded = await uploadImage(image);
@@ -78,63 +71,49 @@ export const useBoardStore = create<BoardState>((set, get) => ({
     }
 
     const { $id } = await database.createDocument(
-      process.env.APPWRITE_TRELLO_DATABASE_ID!,
-      process.env.APPWRITE_TRELLO_TODOS_COLLECTION_ID!,
+      process.env.NEXT_PUBLIC_APPWRITE_TRELLO_DATABASE_ID!,
+      process.env.NEXT_PUBLIC_APPWRITE_TRELLO_TODOS_COLLECTION_ID!,
       ID.unique(),
       {
-        title: todo,
+        title: taskTitle,
         status: columnId,
         ...(file && { image: JSON.stringify(file) }),
       }
     );
 
-    set({ newTaskInput: "" });
-
     set((state) => {
-      const newColumns = new Map(state.board.columns);
+      const columns = state.board.columns;
+      const column = columns.get(columnId);
 
-      const newTodo: Todo = {
+      const newTask: Task = {
         $id,
         $createdAt: new Date().toISOString(),
-        title: todo,
+        title: taskTitle,
         status: columnId,
         ...(file && { image: file }),
       };
 
-      const column = newColumns.get(columnId);
-
       if (!column) {
-        newColumns.set(columnId, {
+        columns.set(columnId, {
           id: columnId,
-          todos: [newTodo],
+          tasks: [newTask],
         });
       } else {
-        newColumns.get(columnId)?.todos.push(newTodo);
+        column.tasks = [...column.tasks, newTask];
       }
 
       return {
-        board: {
-          columns: newColumns,
-        },
+        board: { columns },
       };
     });
   },
 
-  updateTodoInDb: async (todo: Todo, columnId: TypeColumn) => {
+  updateTask: async (task: Task, columnId: TaskStatus) => {
     await database.updateDocument(
-      process.env.APPWRITE_TRELLO_DATABASE_ID!,
-      process.env.APPWRITE_TRELLO_TODOS_COLLECTION_ID!,
-      todo.$id,
-      { title: todo.title, status: columnId }
+      process.env.NEXT_PUBLIC_APPWRITE_TRELLO_DATABASE_ID!,
+      process.env.NEXT_PUBLIC_APPWRITE_TRELLO_TODOS_COLLECTION_ID!,
+      task.$id,
+      { title: task.title, status: columnId }
     );
   },
-
-  searchString: "",
-  setSearchString: (searchString: string) => set({ searchString }),
-
-  newTaskType: "todo",
-  setNewTaskType: (columnId: TypeColumn) => set({ newTaskType: columnId }),
-
-  image: null,
-  setImage: (image: File | null) => set({ image }),
 }));

@@ -1,15 +1,7 @@
-import { database } from "@/appwrite";
 import { TaskStatus, TaskColumn, TaskData, TaskBoard, Task } from "@/typings";
 
-export const getTodosGroupedByColumn = async (): Promise<TaskBoard> => {
-  const data = await database.listDocuments<TaskData>(
-    process.env.NEXT_PUBLIC_APPWRITE_TRELLO_DATABASE_ID!,
-    process.env.NEXT_PUBLIC_APPWRITE_TRELLO_TODOS_COLLECTION_ID!
-  );
-
-  const taskDocuments = data.documents;
-
-  const tasks: Task[] = taskDocuments.map((doc) => {
+export const createBoard = (tasksData: TaskData[]): TaskBoard => {
+  const tasks: Task[] = tasksData.map((doc) => {
     const { image, ...rest } = doc;
     const task: Task = rest;
 

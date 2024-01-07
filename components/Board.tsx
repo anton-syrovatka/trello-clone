@@ -105,8 +105,11 @@ function Board() {
         tasks: finishTasks,
       });
 
-      // update DB
-      updateTask(taskMoved, finishCol.id);
+      // update Task
+      updateTask({
+        ...taskMoved,
+        status: finishCol.id,
+      });
 
       // update store
       setBoard({ ...board, columns: newColumns });

@@ -1,8 +1,7 @@
-import { ID, database, storage } from "@/appwrite";
-import { getTodosGroupedByColumn } from "@/lib/getTodosGroupedByColumn";
-import uploadImage from "@/lib/uploadImage";
-import { TaskBoard, TaskColumn, TaskImage, Task, TaskStatus } from "@/typings";
 import { create } from "zustand";
+import { TaskBoard, TaskColumn, TaskImage, Task, TaskStatus } from "@/typings";
+import { createBoard } from "@/lib/createBoard";
+import * as appwrite from "@/appwrite";
 
 interface BoardState {
   board: TaskBoard;
@@ -14,7 +13,7 @@ interface BoardState {
     columnId: TaskStatus,
     image?: File | null
   ) => Promise<void>;
-  updateTask: (tasks: Task, columnId: TaskStatus) => Promise<void>;
+  updateTask: (tasks: Task) => Promise<void>;
   deleteTask: (taskIndex: number, tasks: Task, id: TaskStatus) => Promise<void>;
 }
 
@@ -22,12 +21,14 @@ export const useBoardStore = create<BoardState>((set, get) => ({
   board: {
     columns: new Map<TaskStatus, TaskColumn>(),
   },
+
   setBoard: (board: TaskBoard) => {
     set({ board });
   },
 
   fetchBoard: async () => {
-    const board = await getTodosGroupedByColumn();
+    const data = await appwrite.getAllTasks();
+    const board = await createBoard(data.documents);
     set({ board });
   },
 
@@ -42,14 +43,10 @@ export const useBoardStore = create<BoardState>((set, get) => ({
     });
 
     if (task.image) {
-      await storage.deleteFile(task.image.bucketId, task.image.fileId);
+      await appwrite.deleteFile(task.image.bucketId, task.image.fileId);
     }
 
-    await database.deleteDocument(
-      process.env.NEXT_PUBLIC_APPWRITE_TRELLO_DATABASE_ID!,
-      process.env.NEXT_PUBLIC_APPWRITE_TRELLO_TODOS_COLLECTION_ID!,
-      task.$id
-    );
+    await appwrite.deleteTask(task.$id);
   },
 
   createTask: async (
@@ -60,7 +57,7 @@ export const useBoardStore = create<BoardState>((set, get) => ({
     let file: TaskImage | undefined;
 
     if (image) {
-      const fileUploaded = await uploadImage(image);
+      const fileUploaded = await appwrite.uploadFile(image);
 
       if (fileUploaded) {
         file = {
@@ -70,16 +67,11 @@ export const useBoardStore = create<BoardState>((set, get) => ({
       }
     }
 
-    const { $id } = await database.createDocument(
-      process.env.NEXT_PUBLIC_APPWRITE_TRELLO_DATABASE_ID!,
-      process.env.NEXT_PUBLIC_APPWRITE_TRELLO_TODOS_COLLECTION_ID!,
-      ID.unique(),
-      {
-        title: taskTitle,
-        status: columnId,
-        ...(file && { image: JSON.stringify(file) }),
-      }
-    );
+    const { $id } = await appwrite.createTask({
+      title: taskTitle,
+      status: columnId,
+      image: file,
+    } as Task);
 
     set((state) => {
       const columns = state.board.columns;
@@ -108,12 +100,7 @@ export const useBoardStore = create<BoardState>((set, get) => ({
     });
   },
 
-  updateTask: async (task: Task, columnId: TaskStatus) => {
-    await database.updateDocument(
-      process.env.NEXT_PUBLIC_APPWRITE_TRELLO_DATABASE_ID!,
-      process.env.NEXT_PUBLIC_APPWRITE_TRELLO_TODOS_COLLECTION_ID!,
-      task.$id,
-      { title: task.title, status: columnId }
-    );
+  updateTask: async (task: Task) => {
+    await appwrite.updateTask(task);
   },
 }));

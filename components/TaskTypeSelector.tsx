@@ -32,6 +32,23 @@ type Props = {
 };
 
 function TaskStatusSelector({ value, onChange }: Props) {
+  const getClassesForActive = (active: boolean) =>
+    active
+      ? "ring-2 ring-white ring-opacity-60 ring-offset-2 ring-offset-sky-300"
+      : "";
+  const getClassesForChecked = (checked: boolean, color: string) =>
+    checked ? `${color} bg-opacity-75 text-white` : "bg-white";
+
+  const getClassesForOption =
+    (color: string) =>
+    ({ active, checked }: { active: boolean; checked: boolean }) => {
+      return [
+        getClassesForActive(active),
+        getClassesForChecked(checked, color),
+        "relative flex cursor-pointer rounded-lg px-5 py-4 shadow-md focus:outline-none",
+      ].join(" ");
+    };
+
   return (
     <div className="w-full py-5">
       <div className="mx-auto w-full max-w-md">
@@ -41,21 +58,7 @@ function TaskStatusSelector({ value, onChange }: Props) {
               <RadioGroup.Option
                 key={type.id}
                 value={type.id}
-                className={({ active, checked }) => `
-                  ${
-                    active
-                      ? "ring-2 ring-white ring-opacity-60 ring-offset-2 ring-offset-sky-300"
-                      : ""
-                  }
-                  ${" "}
-                  ${
-                    checked
-                      ? `${type.color} bg-opacity-75 text-white`
-                      : "bg-white"
-                  }
-                  ${" "}
-                  relative flex cursor-pointer rounded-lg px-5 py-4 shadow-md focus:outline-none
-                `}
+                className={getClassesForOption(type.color)}
               >
                 {({ active, checked }) => (
                   <>

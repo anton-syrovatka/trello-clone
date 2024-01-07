@@ -27,7 +27,7 @@ export default function formatTodosForAI(board: TaskBoard) {
     {} as { [key in TaskStatus]: string[] }
   );
 
-  console.log({ flatArray, flatArrayCounted });
+  // console.log({ flatArray, flatArrayCounted });
 
   return flatArrayCounted;
 }

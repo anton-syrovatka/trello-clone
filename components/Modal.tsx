@@ -41,7 +41,6 @@ function Modal() {
     setNewTaskTitle(e.target.value);
 
   const handleNewTaskStatus = (value: TaskStatus) => {
-    console.log(value);
     setNewTaskStatus(value);
   };
 

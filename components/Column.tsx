@@ -29,7 +29,6 @@ type BadgeProps = {
 };
 
 const CountBadge = ({ searchTerm, tasks }: BadgeProps) => {
-  console.log("Render", "Badge");
   return (
     <span className="text-gray-500 bg-gray-200 rounded-full px-2.5 py-1 text-sm font-normal">
       {!searchTerm

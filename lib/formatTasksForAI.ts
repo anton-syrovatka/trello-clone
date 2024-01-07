@@ -1,14 +1,15 @@
 import { TaskBoard, Task, TaskStatus } from "@/typings";
 
-export default function formatTodosForAI(board: TaskBoard) {
-  const todos = Array.from(board.columns.entries());
+export default function formatTasksForAI(board: TaskBoard) {
+  const tasks = Array.from(board.columns.entries());
 
-  const flatArray = todos.reduce((map, [key, value]) => {
-    map[key] = value.todos;
+  const flatArray = tasks.reduce((map, [key, value]) => {
+    map[key] = value.tasks;
 
     return map;
   }, {} as { [key in TaskStatus]: Task[] });
 
+  // {todo: 1, in-progress: 2: done: 5}
   // const flatArrayCounted = Object.entries(flatArray).reduce(
   //   (map, [key, value]) => {
   //     map[key as TaskStatus] = value.length;
@@ -18,6 +19,7 @@ export default function formatTodosForAI(board: TaskBoard) {
   //   {} as { [key in TaskStatus]: number }
   // );
 
+  // {todo: ["task1", "task2"], in-progress: []: done: []}
   const flatArrayCounted = Object.entries(flatArray).reduce(
     (map, [key, value]) => {
       map[key as TaskStatus] = value.map((item) => item.title);
@@ -26,8 +28,6 @@ export default function formatTodosForAI(board: TaskBoard) {
     },
     {} as { [key in TaskStatus]: string[] }
   );
-
-  // console.log({ flatArray, flatArrayCounted });
 
   return flatArrayCounted;
 }

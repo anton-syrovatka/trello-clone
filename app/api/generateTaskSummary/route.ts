@@ -2,9 +2,14 @@ import openai from "@/openai";
 import { NextResponse } from "next/server";
 
 export async function POST(request: Request) {
-  const { todos } = await request.json();
+  const { tasks } = await request.json();
 
-  const todoData = JSON.stringify(todos);
+  if (process.env.OPENAI_ENABLED! !== "true") {
+    return NextResponse.json({
+      content:
+        "Welcome to Trello Clone! \nUnfortunately AI support is not available at the moment.",
+    });
+  }
 
   try {
     const completion = await openai.chat.completions.create({
@@ -16,18 +21,18 @@ export async function POST(request: Request) {
         {
           role: "system",
           content: `
-            When responding, welcome the user alway as Herr Syrovatka
-            and say welcome to Trello Clone!
+            When responding, welcome user and say welcome to Trello Clone!
             Limit the response to 200 characters
           `,
         },
         {
           role: "user",
           content: `
-            Hi there, provide a summary of the following todos.
-            Count how many todos are in each category such as "Todo", "In Progress", "Done".
+            Hi there, provide a summary of the following tasks.
+            Count how many tasks are in each category such as "Todo", "In Progress", "Done".
             Suggest how user should start carrying out tasks based on their title.
-            Then tell the user to have a productive day! Here's the data: ${todoData}
+            Then tell the user to have a productive day!
+            Here's the data: ${JSON.stringify(tasks)}
           `,
         },
       ],

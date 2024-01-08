@@ -1,6 +1,6 @@
 "use client";
 
-import { TaskBoard, TaskColumn, Task, TaskStatus } from "@/typings";
+import { TaskBoard, TaskColumn } from "@/typings";
 import { useBoardStore } from "@/store/BoardStore";
 import React, { useEffect } from "react";
 import {
@@ -11,17 +11,18 @@ import {
 } from "react-beautiful-dnd";
 import Column from "./Column";
 
-function Board() {
-  const [board, fetchBoard, setBoard, updateTask] = useBoardStore((state) => [
+type Props = { boardData: TaskBoard };
+
+function Board({ boardData }: Props) {
+  const [board, setBoard, updateTask] = useBoardStore((state) => [
     state.board,
-    state.fetchBoard,
     state.setBoard,
     state.updateTask,
   ]);
 
   useEffect(() => {
-    fetchBoard();
-  }, [fetchBoard]);
+    setBoard(boardData);
+  }, [setBoard, boardData]);
 
   const handleOnDragEnd = (result: DropResult) => {
     const { destination, source, type } = result;
@@ -48,7 +49,6 @@ function Board() {
 
     // type === "card"
 
-    // insure indexes are stored as numbers 0,1,2 instead of ids with DND lib
     const columns = Array.from(board.columns);
     const startColIndex = columns[Number(source.droppableId)];
     const finishColIndex = columns[Number(destination.droppableId)];

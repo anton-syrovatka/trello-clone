@@ -1,12 +1,10 @@
 import { create } from "zustand";
 import { TaskBoard, TaskColumn, TaskImage, Task, TaskStatus } from "@/typings";
-import { createBoard } from "@/lib/createBoard";
 import * as appwrite from "@/appwrite";
 
 interface BoardState {
   board: TaskBoard;
   setBoard: (board: TaskBoard) => void;
-  fetchBoard: () => void;
 
   createTask: (
     taskTitle: string,
@@ -23,12 +21,6 @@ export const useBoardStore = create<BoardState>((set, get) => ({
   },
 
   setBoard: (board: TaskBoard) => {
-    set({ board });
-  },
-
-  fetchBoard: async () => {
-    const data = await appwrite.getAllTasks();
-    const board = await createBoard(data.documents);
     set({ board });
   },
 

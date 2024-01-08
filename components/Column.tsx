@@ -1,7 +1,7 @@
 "use client";
 
 import { Task, TaskStatus } from "@/typings";
-import React, { memo, useMemo } from "react";
+import React, { useMemo } from "react";
 import {
   Draggable,
   DraggableProvided,
@@ -10,10 +10,10 @@ import {
   DroppableStateSnapshot,
 } from "react-beautiful-dnd";
 import { PlusCircleIcon } from "@heroicons/react/16/solid";
-import { useBoardStore } from "@/store/BoardStore";
 import { useModalStore } from "@/store/ModalStore";
 import { useSearchStore } from "@/store/SearchStore";
 import TaskCard from "./TaskCard";
+import CountBadge from "./CountBadge";
 
 const statusToTitle: {
   [key in TaskStatus]: string;
@@ -22,27 +22,6 @@ const statusToTitle: {
   "in-progress": "In Progress",
   done: "Done",
 };
-
-type BadgeProps = {
-  searchTerm: string;
-  tasks: Task[];
-};
-
-const CountBadge = ({ searchTerm, tasks }: BadgeProps) => {
-  return (
-    <span className="text-gray-500 bg-gray-200 rounded-full px-2.5 py-1 text-sm font-normal">
-      {!searchTerm
-        ? tasks.length
-        : tasks.filter((task) =>
-            task.title
-              .toLocaleLowerCase()
-              .includes(searchTerm.toLocaleLowerCase())
-          ).length}
-    </span>
-  );
-};
-
-const CountBadgeMemo = memo(CountBadge);
 
 type Props = {
   id: TaskStatus;
@@ -94,10 +73,7 @@ function Column({ id, index, tasks }: Props) {
               >
                 <h2 className="flex justify-between font-bold text-xl p-2">
                   {statusToTitle[id]}{" "}
-                  <CountBadgeMemo
-                    searchTerm={searchTerm}
-                    tasks={filteredTasks}
-                  />
+                  <CountBadge searchTerm={searchTerm} tasks={filteredTasks} />
                 </h2>
 
                 <div className="space-y-2">

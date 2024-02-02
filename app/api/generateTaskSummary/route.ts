@@ -1,5 +1,6 @@
 import openai from '@/openai';
 import { NextResponse } from 'next/server';
+import { APIError } from 'openai/error.mjs';
 
 export async function POST(request: Request) {
   const { tasks } = await request.json();
@@ -42,7 +43,9 @@ export async function POST(request: Request) {
 
     return NextResponse.json(choice.message);
   } catch (error) {
-    return NextResponse.json({ error });
-    // return NextResponse.json({ error }, { status: 400 });
+    if (error instanceof APIError) {
+      return NextResponse.json(error, { status: error.status });
+    }
+    return NextResponse.json(error, { status: 500 });
   }
 }
